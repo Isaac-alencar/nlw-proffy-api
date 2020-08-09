@@ -50,7 +50,7 @@ class ClassesController {
     }
   }
   async create(req: Request, res: Response) {
-    const { name, avatar, whatsapp, bio, subject, cost, shcedule } = req.body;
+    const { name, avatar, whatsapp, bio, subject, cost, schedule } = req.body;
 
     /**
      * Utilizando transaction para que, caso alugma ação que está sendo realizada no banco,
@@ -82,7 +82,7 @@ class ClassesController {
 
       const class_id = isertedClasses[0];
 
-      const classSchedule = shcedule.map((scheduleItem: ScheduleItem) => {
+      const classSchedule = schedule.map((scheduleItem: ScheduleItem) => {
         return {
           class_id,
           week_day: scheduleItem.week_day,
