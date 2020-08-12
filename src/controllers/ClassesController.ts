@@ -25,25 +25,27 @@ class ClassesController {
        * Fazendo os filtros necesários, pois a listagem de classes será de acordo com os filtros
        * aplicados pelo usuário: matéria, horário e dia da semana;
        */
+
+      /**
+       * O where exists faz uma espécie de condicional. Se o que está sendo buscado existir
+       * a query em seguida, será exibida, caso contrário retornará um [];
+       */
       const classes = await database("classes")
-        /**
-         * O where exists faz uma espécie de condicional. Se o que está sendo buscado existir
-         * a query em seguida, será exibida, caso contrário retornará um [];
-         */
         .whereExists(function () {
           this.select("class_schedule.*")
             .from("class_schedule")
-            .whereRaw(" `class_schedule`.`class_id` = `classes`. `id` ")
-            .whereRaw(" `class_schedule`.`week_day` = ??", [Number(week_day)])
-            .whereRaw(" `class_schedule`.`from` <= ??", [timeInMinutes])
-            .whereRaw(" `class_schedule`.`to` > ??", [timeInMinutes]);
+            .whereRaw("class_schedule.class_id = classes.id")
+            .whereRaw("class_schedule.week_day = ??", [Number(week_day)])
+            .whereRaw("class_schedule.from <= ??", [timeInMinutes])
+            .whereRaw("class_schedule.to > ??", [timeInMinutes]);
         })
-        .where("classes.subject", "=", subject as string)
+        .where("classes.subject" as any, "=", subject as string)
         .join("users", "classes.user_id", "=", "users.id")
         .select(["classes.*", "users.*"]);
 
       return res.json(classes);
     } catch (err) {
+      console.log(err);
       return res.status(400).json({
         error: "Unexpect error at list classes",
       });
@@ -65,20 +67,24 @@ class ClassesController {
        * nova query de select. E como a função insert retorna uma lista de id's
        * podemos usar a posição 0 do array que será o usuário inserido no banco
        */
-      const insertedUsers = await trx("users").insert({
-        name,
-        avatar,
-        whatsapp,
-        bio,
-      });
+      const insertedUsers = await trx("users")
+        .insert({
+          name,
+          avatar,
+          whatsapp,
+          bio,
+        })
+        .returning("id");
 
       const user_id = insertedUsers[0]; //Recuperando o id do usuário para usar como FK na tabela classes
 
-      const isertedClasses = await trx("classes").insert({
-        subject,
-        cost,
-        user_id,
-      });
+      const isertedClasses = await trx("classes")
+        .insert({
+          subject,
+          cost,
+          user_id,
+        })
+        .returning("id");
 
       const class_id = isertedClasses[0];
 

@@ -14,6 +14,14 @@ class ConnectionController {
     const { user_id } = req.body;
 
     try {
+      const user = database("users").select("*").where("id", user_id);
+
+      if (!user) {
+        return res.status(404).send().json({
+          erro: "User not found",
+        });
+      }
+
       await database("connections").insert({
         user_id,
       });
